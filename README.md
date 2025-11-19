@@ -1,6 +1,6 @@
-# openmensa-darmstadt-parser
+# openmensa-parser-darmstadt
 
-- launch with `openmensa-darmstadt-parser <config file>`
+- launch with `openmensa-parser-darmstadt <config file>`
 
 example config:
 ```json

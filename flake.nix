@@ -1,5 +1,5 @@
 {
-  description = "openmensa-darmstadt-parser";
+  description = "openmensa-parser-darmstadt";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
@@ -37,7 +37,7 @@
           pkgs = mkPkgs system;
         in
         rec {
-          openmensa-darmstadt-parser = pkgs.rustPlatform.buildRustPackage {
+          openmensa-parser-darmstadt = pkgs.rustPlatform.buildRustPackage {
             inherit ((builtins.fromTOML (builtins.readFile ./Cargo.toml)).package) name;
             inherit ((builtins.fromTOML (builtins.readFile ./Cargo.toml)).package) version;
 
@@ -54,7 +54,7 @@
             ];
           };
 
-          default = openmensa-darmstadt-parser;
+          default = openmensa-parser-darmstadt;
         }
       );
 

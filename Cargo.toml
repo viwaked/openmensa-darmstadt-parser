@@ -1,5 +1,5 @@
 [package]
-name = "openmensa-darmstadt-parser"
+name = "openmensa-parser-darmstadt"
 version = "0.1.0"
 edition = "2024"
 

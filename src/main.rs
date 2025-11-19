@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fs::File, io::BufReader};
 
-use openmensa_darmstadt_parser::{AppState, feed};
+use openmensa_parser_darmstadt::{AppState, feed};
 
 #[derive(Debug, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
