@@ -1,5 +1,6 @@
 use std::{collections::HashMap, fs::File, io::BufReader};
 
+use axum_prometheus::PrometheusMetricLayerBuilder;
 use openmensa_parser_darmstadt::{AppState, feed};
 
 #[derive(Debug, serde::Deserialize)]
@@ -31,13 +32,26 @@ async fn main() {
         }
     }
 
+    let prometheus_prefix =
+        std::env::var("PROMETHEUS_PREFIX").unwrap_or(std::env!("CARGO_PKG_NAME").into());
+    let (prometheus_layer, metric_handle) = PrometheusMetricLayerBuilder::new()
+        .with_prefix(prometheus_prefix)
+        .enable_response_body_size(true)
+        .with_default_metrics()
+        .build_pair();
+
     let app = axum::Router::new()
         .nest("/feed", feed::router())
+        .route(
+            "/metrics",
+            axum::routing::get(|| async move { metric_handle.render() }),
+        )
         .with_state(AppState {
             deploy_url: config.deploy_url,
             registered_canteens,
         })
-        .layer(tower_http::trace::TraceLayer::new_for_http());
+        .layer(tower_http::trace::TraceLayer::new_for_http())
+        .layer(prometheus_layer);
 
     let bind = config.bind.unwrap_or("0.0.0.0:3000".into());
     tracing::info!("binding to {}", bind);
