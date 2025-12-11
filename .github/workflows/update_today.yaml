@@ -1,0 +1,55 @@
+name: Build & publish XML (hourly)
+
+on:
+  # schedule:
+  #   - cron: "0 * * * *"   # every hour UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: xml-hourly
+  cancel-in-progress: true
+
+env:
+  CANTEENS: "1 2 3 4 5 7"
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+
+      - name: Prepare site dir
+        run: rm -rf site && mkdir -p site/today
+      - name: Generate today XMLs (run flake CLI)
+        run: |
+          # run CLI for all canteens; adapt if cli accepts multiple --canteen at once
+          feed_args=()
+          for id in $CANTEENS; do
+            feed_args+=( --canteen "$id" )
+            feed_args+=( --feed "${id};today;0;${SITE_URL}/today/${id}.xml;6-18;*;*;30 1" )
+          done
+          for id in $CANTEENS; do
+            nix run .#cli -- "${feed_args[@]}" --out ./site/today
+          done
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './site'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
