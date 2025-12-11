@@ -1,0 +1,97 @@
+name: build & publish xml feed (full)
+
+on:
+  schedule:
+    - cron: "0 16 * * *"   # 16:00 UTC / 17 CET / 18 CEST
+  workflow_run:
+    workflows: ["build & cache binaries"]
+    types:
+      - completed
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: feeds
+  cancel-in-progress: false
+
+env:
+  CANTEENS: "1 2 3 4 5 7"
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Set up dependencies and directories
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+      - uses: cachix/cachix-action@v15
+        with:
+          name: openmensa-parser-darmstadt
+          skipPush: true
+      - name: Prepare site dir
+        run: rm -rf site && mkdir -p site/
+      - name: Restore Full Data from Cache
+        uses: actions/cache/restore@v4
+        with:
+          path: site/
+          key: feeds-placeholder 
+          restore-keys: feeds-
+        
+      - name: Compute env vars
+        id: compute_vars
+        run: |
+          date=$(TZ='Europe/Berlin' date +'%Y-%m-%d')
+          echo "DATE=$date" >> $GITHUB_ENV
+          echo "DATE=$date"
+
+          owner=${{ github.repository_owner }}
+          repo=$(basename "${{ github.repository }}")
+          if [ "$repo" = "${owner}.github.io" ]; then
+            site="https://${owner}.github.io"
+          else
+            site="https://${owner}.github.io/${repo}"
+          fi
+          echo "SITE_URL=$site" >> $GITHUB_ENV
+          echo "SITE_URL=$site"
+
+      - name: Remove old xml feeds
+        run: |
+          rm -r site/full/* || true
+      
+      - name: Generate full XMLs (run flake CLI)
+        run: |
+          feed_args=()
+          for id in $CANTEENS; do
+            feed_args+=( --canteen "$id" )
+            feed_args+=( --feed "${id};today;0;${SITE_URL}/today/${id}.xml;6-18;30;*;*;;30 1" )
+            feed_args+=( --feed "${id};full;1;${SITE_URL}/full/${id}.xml;18;30;*;*;;30 1" )
+          done
+          for id in $CANTEENS; do
+            nix run .#cli -- "${feed_args[@]}" --out ./site/full --from ${DATE}
+          done
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './site'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+      - name: Save Build to Cache
+        uses: actions/cache/save@v4
+        with:
+          path: site/
+          key: feeds-${{ github.run_id }}
