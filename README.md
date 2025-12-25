@@ -1,18 +1,2 @@
 # openmensa-parser-darmstadt
-
-- launch with `openmensa-parser-darmstadt <config file>`
-
-example config:
-```json
-{
-  "bind": "0.0.0.0:3000",
-  "deployUrl": "http://localhost:3000",
-  "canteens": {
-    "1": [ "1", "stadtmitte" ],
-    "2": [ "2", "lichtwiese" ],
-    "3": [ "3", "schoefferstrasse", "schöfferstraße" ],
-    "4": [ "4", "dieburg" ],
-    "7": [ "7", "schoeffers", "schöffers" ]
-  }
-}
-```
+[![build binaries](https://github.com/viwaked/openmensa-parser-darmstadt/actions/workflows/build.yaml/badge.svg)](https://github.com/viwaked/openmensa-parser-darmstadt/actions/workflows/build.yaml) [![build & publish xml feed (full)](https://github.com/viwaked/openmensa-parser-darmstadt/actions/workflows/update_full.yaml/badge.svg)](https://github.com/viwaked/openmensa-parser-darmstadt/actions/workflows/update_full.yaml) [![build & publish xml feed (today)](https://github.com/viwaked/openmensa-parser-darmstadt/actions/workflows/update_today.yaml/badge.svg)](https://github.com/viwaked/openmensa-parser-darmstadt/actions/workflows/update_today.yaml)
